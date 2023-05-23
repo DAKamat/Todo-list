@@ -1,63 +1,76 @@
-document.addEventListener("DOMContentLoaded", function () {
-    var taskInput = document.getElementById("task-input");
-    var addTaskButton = document.getElementById("add-task-btn");
-    var taskList = document.getElementById("task-list-wrapper");
+const todoForm = document.getElementById('todo-form');
+const todoInput = document.getElementById('task-input');
+const todoList = document.getElementById('task-list-wrapper');
 
-    addTaskButton.addEventListener("click", function () {
-        var taskName = taskInput.value;
-        if (taskName.trim() !== "") {
-            var taskItem = createTaskItem(taskName);
-            taskList.prepend(taskItem);
-            taskInput.value = "";
-        }
+// Load tasks from Local Storage
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+// Render tasks
+function renderTasks() {
+    todoList.innerHTML = '';
+
+    tasks.map((task, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+      <span class="${task.completed ? 'completed' : ''}">${task.text}</span>
+      <div class="actions">
+        <button onclick="completeTask(${index})">Complete</button>
+        <button onclick="editTask(${index})">Edit</button>
+        <button onclick="deleteTask(${index})">Delete</button>
+      </div>`;
+        todoList.prepend(listItem);
     });
+}
 
-    function createTaskItem(taskName) {
-        var taskItem = document.createElement("li");
-        taskItem.className = "task-item";
+// Save tasks to Local Storage
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
 
-        var taskNameElement = document.createElement("span");
-        taskNameElement.className = "task-name";
-        taskNameElement.textContent = taskName;
+// Add new task
+function addTask(text) {
+    const task = {
+        text: text,
+        completed: false
+    };
 
-        var editButton = document.createElement("button");
-        editButton.textContent = "Edit";
-        editButton.addEventListener("click", function () {
+    tasks.push(task);
+    saveTasks();
+    renderTasks();
+}
 
-            // var newTaskName = taskInput.value = taskName;
-            // taskInput.focus()
+// Complete task
+function completeTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+}
 
-            var newTaskName = prompt("Enter the new task name", taskName);
-            if (newTaskName && newTaskName.trim() !== "") {
-                taskNameElement.textContent = newTaskName;
-            }
-        });
-
-        var deleteButton = document.createElement("button");
-        deleteButton.textContent = "Delete";
-        deleteButton.addEventListener("click", function () {
-            taskItem.remove();
-        });
-
-        var completeButton = document.createElement("button");
-        completeButton.textContent = "Complete";
-        completeButton.addEventListener("click", function () {
-            taskItem.classList.toggle("complete");
-        });
-
-
-        //console.log(deleteButton.textContent);
-        // console.log(deleteButton);
-        //console.log(completeButton);
-        var taskActions = document.createElement("div");
-        taskActions.className = "task-actions";
-        taskActions.appendChild(editButton);
-        taskActions.appendChild(deleteButton);
-        taskActions.appendChild(completeButton);
-
-        taskItem.appendChild(taskNameElement);
-        taskItem.appendChild(taskActions);
-
-        return taskItem;
+// Edit task
+function editTask(index) {
+    const newText = prompt('Enter the new task name');
+    if (newText !== null) {
+        tasks[index].text = newText;
+        saveTasks();
+        renderTasks();
     }
-});
+}
+
+// Delete task
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    saveTasks();
+    renderTasks();
+}
+
+// Handle form submission
+function addTaskBtn() {
+    const text = todoInput.value.trim();
+    if (text !== '') {
+        addTask(text);
+        todoInput.value = '';
+    }
+}
+
+// Render initial tasks
+renderTasks();
